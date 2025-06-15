@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>Sistema de Vuelos</title>
+    <style>
+        body { margin: 0; font-family: sans-serif; }
+        .container { display: flex; height: 100vh; }
+        aside {
+          width: 200px; background: #2b0079; color: white;
+          display: flex; flex-direction: column; padding: 20px;
+        }
+        aside button {
+          margin: 10px 0; padding: 10px; border: none;
+          font-weight: bold; cursor: pointer;
+          background: white; color: #2b0079;
+          border-radius: 5px; transition: 0.3s;
+        }
+        aside button:hover { background: #f0f0f0; }
+        main { flex: 1; padding: 30px; }
+        section { display: none; }
+        section.active { display: block; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #999; padding: 8px; text-align: left; }
+        th { background: #f5f5f5; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group select {
+          width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;
+          box-sizing: border-box;
+        }
+        button {
+          background: #2b0079; color: white; padding: 10px 20px;
+          border: none; border-radius: 5px; cursor: pointer; font-weight: bold;
+        }
+        button:hover { background: #1a0050; }
+        .error { color: red; font-size: 14px; margin-top: 5px; }
+        .success { color: green; font-size: 14px; margin-top: 5px; }
+    </style>
+</head>
+<body>
+<div id="modal-login" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 30px; border-radius: 10px; width: 350px;">
+        <h3>Bienvenido</h3>
+        <p>Ingresá tus datos para comenzar</p>
+        <div class="form-group"><label>DNI:</label><input type="number" id="login-dni" required /></div>
+        <div class="form-group"><label>Nombre:</label><input type="text" id="login-nombre" required /></div>
+        <div class="form-group"><label>Apellido:</label><input type="text" id="login-apellido" required /></div>
+        <div class="form-group"><label>Correo:</label><input type="email" id="login-correo" required /></div>
+        <div class="form-group"><label>Contraseña:</label><input type="password" id="login-contrasenia" required /></div>
+        <button onclick="guardarUsuario()">Continuar</button>
+        <div id="login-error" class="error" style="display: none;"></div>
+    </div>
+</div>
+
+<div class="container">
+    <aside>
+        <h2>Menú</h2>
+        <button onclick="mostrarSeccion('consultar')">Consultar Vuelos</button>
+        <button onclick="mostrarSeccion('reservas')">Visualizar Reservas</button>
+        <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.3);">
+            <p style="font-size: 12px; margin: 0;">Usuario: <span id="usuario-info"></span></p>
+        </div>
+    </aside>
+    <main>
+        <!-- Seccion Consultar Vuelos -->
+        <section id="consultar" class="active">
+            <h2>Consulta de Vuelos</h2>
+            <table id="tabla-vuelos">
+                <thead>
+                <tr><th>ID</th><th>Fecha</th><th>Aerolínea</th><th>Aeropuertos</th><th>Tarifas</th><th>Acción</th></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <div id="seccion-reserva" style="margin-top: 30px; display: none;">
+                <h3>Reservar Vuelo</h3>
+                <div id="info-vuelo"></div>
+                <form id="form-reserva">
+                    <input type="hidden" id="idVuelo" />
+                    <div class="form-group">
+                        <label>Clase:</label>
+                        <select id="claseTarifa" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo Tarjeta:</label>
+                        <select id="tipoTarjeta" required>
+                            <option value="">Seleccione tipo</option>
+                            <option value="DEBITO">Débito</option>
+                            <option value="CREDITO">Crédito</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Nº Tarjeta:</label>
+                        <input type="text" id="numeroTarjeta" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Total:</label>
+                        <input type="number" id="cantidadPago" readonly />
+                    </div>
+                    <button type="submit">Confirmar Reserva</button>
+                </form>
+                <div id="reserva-mensaje"></div>
+            </div>
+        </section>
+
+        <!-- Seccion Reservas -->
+        <section id="reservas">
+            <h2>Mis Reservas</h2>
+            <input type="number" id="dniConsulta" placeholder="DNI" />
+            <button onclick="cargarReservas()">Ver</button>
+            <table id="tabla-reservas">
+                <thead><tr><th>Aerolínea</th><th>Fecha</th><th>Total</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            <div id="reservas-mensaje"></div>
+        </section>
+    </main>
+</div>
+
+<script>
+    let usuarioGlobal = {}, vuelosData = [];
+
+    function mostrarSeccion(id) {
+      document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+    }
+
+    function guardarUsuario() {
+      usuarioGlobal = {
+        dni: document.getElementById("login-dni").value,
+        nombre: document.getElementById("login-nombre").value,
+        apellido: document.getElementById("login-apellido").value,
+        correo: document.getElementById("login-correo").value,
+        contrasenia: document.getElementById("login-contrasenia").value
+      };
+      document.getElementById("modal-login").style.display = "none";
+      document.getElementById("usuario-info").textContent = usuarioGlobal.nombre + " " + usuarioGlobal.apellido;
+      document.getElementById("dniConsulta").value = usuarioGlobal.dni;
+    }
+
+    function seleccionarVuelo(id, aerolinea, fecha, aeropuertos, tarifas) {
+      document.getElementById("idVuelo").value = id;
+      document.getElementById("seccion-reserva").style.display = "block";
+      document.getElementById("info-vuelo").innerHTML = `
+        <b>${aerolinea}</b><br>
+        Fecha: ${fecha}<br>
+        Ruta: ${aeropuertos.join(" → ")}`;
+
+      const select = document.getElementById("claseTarifa");
+      select.innerHTML = "<option value=''>Seleccione una clase</option>";
+      tarifas.forEach(t => {
+        const total = t.precioTarifa + t.impuestoTarifa;
+        select.innerHTML += `<option value="${t.claseTarifa}" data-precio="${total}">${t.claseTarifa} - $${total}</option>`;
+      });
+
+      select.onchange = () => {
+        const precio = select.options[select.selectedIndex].getAttribute("data-precio");
+        document.getElementById("cantidadPago").value = precio;
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      fetch("http://localhost:9000/api/v1/vuelos/dto")
+        .then(r => r.json())
+        .then(data => {
+          console.log("VUELOS DESDE BACKEND:", data);
+          vuelosData = data;
+          const tbody = document.querySelector("#tabla-vuelos tbody");
+          tbody.innerHTML = "";
+          data.forEach(v => {
+            const fila = `<tr>
+              <td>${v.id}</td>
+              <td>${v.fecha}</td>
+              <td>${v.aerolinea}</td>
+              <td>${v.aeropuertos.join(", ")}</td>
+              <td>${v.tarifas.map(t => `${t.claseTarifa}: $${t.precioTarifa} + $${t.impuestoTarifa}`).join("<br>")}</td>
+              <td><button onclick='seleccionarVuelo(${v.id}, "${v.aerolinea}", "${v.fecha}", ${JSON.stringify(v.aeropuertos)}, ${JSON.stringify(v.tarifas)})'>Reservar</button></td>
+            </tr>`;
+            tbody.innerHTML += fila;
+          });
+        });
+
+      document.getElementById("form-reserva").addEventListener("submit", e => {
+        e.preventDefault();
+        const datos = {
+          idVuelo: document.getElementById("idVuelo").value,
+          tipoTarjeta: document.getElementById("tipoTarjeta").value,
+          numeroTarjeta: parseInt(document.getElementById("numeroTarjeta").value),
+          cantidadPago: parseInt(document.getElementById("cantidadPago").value),
+          dni: parseInt(usuarioGlobal.dni),
+          nombre: usuarioGlobal.nombre,
+          apellido: usuarioGlobal.apellido,
+          correo: usuarioGlobal.correo,
+          contrasenia: usuarioGlobal.contrasenia
+        };
+
+        fetch("http://localhost:9000/api/v1/reservas/crear", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(datos)
+        }).then(r => {
+          if (r.ok) {
+            document.getElementById("reserva-mensaje").innerHTML = '<div class="success">Reserva realizada con éxito</div>';
+          } else {
+            document.getElementById("reserva-mensaje").innerHTML = '<div class="error">Error al guardar la reserva</div>';
+          }
+        });
+      });
+    });
+
+    function cargarReservas() {
+      const dni = document.getElementById("dniConsulta").value;
+      fetch(`http://localhost:9000/api/v1/reservas?dni=${dni}`)
+        .then(r => r.json())
+        .then(data => {
+          const tbody = document.querySelector("#tabla-reservas tbody");
+          tbody.innerHTML = "";
+          data.forEach(r => {
+            const fila = `<tr><td>${r.aerolinea}</td><td>${r.fecha}</td><td>$${r.precioTotal}</td></tr>`;
+            tbody.innerHTML += fila;
+          });
+        });
+    }
+</script>
+</body>
+</html>
