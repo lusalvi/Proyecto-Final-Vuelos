@@ -183,10 +183,10 @@
       document.getElementById("form-reserva").addEventListener("submit", e => {
         e.preventDefault();
         const datos = {
-          idVuelo: document.getElementById("idVuelo").value,
-          tipoTarjeta: document.getElementById("tipoTarjeta").value,
-          numeroTarjeta: parseInt(document.getElementById("numeroTarjeta").value),
-          cantidadPago: parseInt(document.getElementById("cantidadPago").value),
+          idVuelo: parseInt(document.getElementById("idVuelo").value),
+          tipoTarjeta: document.getElementById("tipoTarjeta").value.toUpperCase().trim(),
+          numeroTarjeta: document.getElementById("numeroTarjeta").value.trim(),
+          cantidadPago: parseFloat(document.getElementById("cantidadPago").value),
           dni: parseInt(usuarioGlobal.dni),
           nombre: usuarioGlobal.nombre,
           apellido: usuarioGlobal.apellido,
@@ -198,10 +198,12 @@
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(datos)
-        }).then(r => {
+        }).then(async r => {
           if (r.ok) {
             document.getElementById("reserva-mensaje").innerHTML = '<div class="success">Reserva realizada con éxito</div>';
           } else {
+            const errorText = await r.text();
+            console.error("ERROR EN RESERVA:", errorText);
             document.getElementById("reserva-mensaje").innerHTML = '<div class="error">Error al guardar la reserva</div>';
           }
         });

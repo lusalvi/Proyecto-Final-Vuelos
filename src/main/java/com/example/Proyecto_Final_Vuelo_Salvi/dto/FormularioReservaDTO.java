@@ -15,6 +15,6 @@ public class FormularioReservaDTO {
     private String correo;
     private String contrasenia;
     private String tipoTarjeta;
-    private int numeroTarjeta;
+    private long numeroTarjeta;
     private int cantidadPago;
 }

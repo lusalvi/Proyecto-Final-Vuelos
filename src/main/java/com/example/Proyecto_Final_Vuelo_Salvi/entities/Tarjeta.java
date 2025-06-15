@@ -18,7 +18,7 @@ public class Tarjeta extends Base {
     @Column(name = "cantidadPago")
     private int cantidadPago;
     @Column(name = "numeroTarjeta")
-    private int numeroTarjeta;
+    private Long numeroTarjeta;
     @Enumerated(value = EnumType.STRING)
     @Column(name = "TipoTarjeta")
     private TipoTarjeta tipoTarjeta;

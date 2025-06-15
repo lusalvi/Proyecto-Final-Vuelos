@@ -13,8 +13,11 @@ import java.util.List;
 public class ReservaServiceImpl extends BaseServiceImpl<Reserva,Long> implements ReservaService {
     @Autowired
     private ReservaRepository reservaRepository;
+    @Autowired
     private UsuarioRepository usuarioRepository;
+    @Autowired
     private TarjetaRepository tarjetaRepository;
+    @Autowired
     private VueloRepository vueloRepository;
 
     public ReservaServiceImpl(BaseRepository<Reserva, Long> baseRepository, VueloRepository vueloRepository, TarjetaRepository tarjetaRepository, UsuarioRepository usuarioRepository, ReservaRepository reservaRepository) {
@@ -45,7 +48,6 @@ public class ReservaServiceImpl extends BaseServiceImpl<Reserva,Long> implements
                     return usuarioRepository.save(nuevo);
                 });
 
-        // Crear tarjeta
         Tarjeta tarjeta = new Tarjeta();
         tarjeta.setTipoTarjeta(TipoTarjeta.valueOf(dto.getTipoTarjeta().toUpperCase()));
         tarjeta.setNumeroTarjeta(dto.getNumeroTarjeta());
@@ -53,11 +55,9 @@ public class ReservaServiceImpl extends BaseServiceImpl<Reserva,Long> implements
         tarjeta.setUsuario(usuario);
         tarjetaRepository.save(tarjeta);
 
-        // Buscar vuelo
         Vuelo vuelo = vueloRepository.findById(dto.getIdVuelo())
                 .orElseThrow(() -> new RuntimeException("Vuelo no encontrado"));
 
-        // Crear reserva
         Reserva reserva = new Reserva();
         reserva.setTarjeta(tarjeta);
         reserva.setVueloReservado(vuelo);
