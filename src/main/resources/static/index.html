@@ -212,9 +212,10 @@
 
     function cargarReservas() {
       const dni = document.getElementById("dniConsulta").value;
-      fetch(`http://localhost:9000/api/v1/reservas?dni=${dni}`)
+      fetch(`http://localhost:9000/api/v1/reservas/por-dni?dni=${dni}`)
         .then(r => r.json())
         .then(data => {
+          console.log("RESERVAS DESDE BACKEND:", data); // <-- AGREGÁ ESTO
           const tbody = document.querySelector("#tabla-reservas tbody");
           tbody.innerHTML = "";
           data.forEach(r => {
